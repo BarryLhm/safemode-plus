@@ -1,8 +1,7 @@
 #!/system/bin/sh
 
-dir="$(dirname "$0")"
-keycheck="$dir/keycheck"
-chmod 0700 "$keycheck"
+export MODDIR="$(dirname "$0")"
+export PATH="$PATH:$MODDIR/bin"
 
 count=0
 trigger()
@@ -20,16 +19,16 @@ trigger()
 
 action()
 {
-	[ -d "$dir/scripts/$1" ] || return
-	for script in "$dir/scripts/$1/"*.sh
+	[ -d "$MODDIR/scripts/$1" ] || return
+	for script in "$MODDIR/scripts/$1/"*.sh
 	do "$script" &
 	done
 }
 
 while true
-do	"$keycheck"
+do	keycheck
 	ret="$?"
-	[ "$(getprop sys.boot_completed)" = "1" ] && break
+	[ "$(getprop init.svc.bootanim)" = "stopped" ] && break
 	trigger "$ret"
 done
 
