@@ -1,28 +1,37 @@
 #!/system/bin/sh
 
-keycheck="$(dirname "$0")/keycheck"
+dir="$(dirname "$0")"
+keycheck="$dir/keycheck"
 chmod 0700 "$keycheck"
 
-process()
+count=0
+trigger()
 {
+	count="$((count + 1))"
 	case "$1" in
+	## error
 	1) echo "error"; exit;;
-	41) echo "down"; key=down;;
-	42) echo "up"; key=up;;
+	## volume up
+	42) echo "action $count"; action "$count";;
+	## others
+	*) return;;
 	esac
 }
 
-"$keycheck" || process "$?"
-"$keycheck" || process "$?"
-"$keycheck" || process "$?"
+action()
+{
+	[ -d "$dir/scripts/$1" ] || return
+	for script in "$dir/scripts/$1/"*.sh
+	do "$script" &
+	done
+}
 
-[ "$(getprop "sys.boot_completed")" = "1" ] && echo "boot completed" && exit
+while true
+do	"$keycheck"
+	ret="$?"
+	[ "$(getprop sys.boot_completed)" = "1" ] && break
+	trigger "$ret"
+done
 
-if [ "$key" = up ]
-then	rm /data/system/users/0/package-restrictions.*
-	settings delete secure enabled_accessibility_services
-	reboot
-elif [ "$key" = down ]
-then :
-else :
-fi
+echo "boot completed"
+exit
