@@ -2,6 +2,7 @@
 
 export MODDIR="$(dirname "$0")"
 export PATH="$PATH:$MODDIR/bin"
+exec 2>"$MODDIR/logs/default.log" >&2
 
 count=0
 trigger()

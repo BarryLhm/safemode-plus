@@ -1,25 +1,26 @@
 #!/system/bin/sh
 
-orig_set="$(settings get global adb_enabled)"
 orig_prop="$(getprop sys.usb.config)"
 
 enable()
 {
-	resetprop ro.adb.secure 0
+	if [ "$insecure" != 1 ]
+	then	resetprop ro.adb.secure 0
+		setprop ctl.stop adbd
+		insecure=1
+	fi
 	setprop sys.usb.config adb
-	settings put global adb_enabled 1
+	setprop ctl.start adbd
 }
 
 disable()
 {
 	resetprop ro.adb.secure 1
-	setprop sys.usb.config 0
-	settings put global adb_enabled 0
+	setprop sys.usb.config ''
 	setprop sys.usb.config "$orig_prop"
-	settings put global adb_enabled "$orig_set"
 }
 
-while [ "$(getprop "sys.boot_completed")" != 1 ]
+until false #[ "$(getprop sys.boot_completed)" = 1 ]
 do	enable
 	sleep 1
 done
